@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Voice Lab (Replicate Powered)</title>
+    
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="AI Voice Lab">
+    <meta name="apple-mobile-web-app-title" content="AI Voice Lab">
+    <meta name="theme-color" content="#1a1a1a">
+    <meta name="description" content="A powerful text-to-speech and voice cloning web application.">
+
+    <style>
+        :root {
+            --bg-color: #18191a;
+            --fg-color: #242526;
+            --text-color: #e4e6eb;
+            --text-color-light: #b0b3b8;
+            --border-color: #3a3b3c;
+            --primary-color: #38bdf8;
+            --primary-color-hover: #0ea5e9;
+            --secondary-color: #4b5563;
+            --danger-color: #ef4444;
+            --success-color: #22c55e;
+            --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --border-radius: 8px;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .dark-mode {
+            --bg-color: #18191a;
+            --fg-color: #242526;
+            --text-color: #e4e6eb;
+            --text-color-light: #b0b3b8;
+            --border-color: #3a3b3c;
+            --primary-color: #38bdf8;
+            --primary-color-hover: #0ea5e9;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        body { padding: 1rem; max-width: 800px; margin: 0 auto; }
+        .container { display: flex; flex-direction: column; gap: 1.5rem; }
+        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; }
+        header h1 { font-size: 1.75rem; }
+        .card { background-color: var(--fg-color); border-radius: var(--border-radius); box-shadow: var(--shadow); padding: 1.5rem; border: 1px solid var(--border-color); }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
+        textarea, select, input { width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); background-color: var(--bg-color); color: var(--text-color); font-family: inherit; font-size: 1rem; }
+        textarea:focus, select:focus, input:focus { outline: 2px solid var(--primary-color); border-color: var(--primary-color); }
+        textarea { resize: vertical; min-height: 120px; }
+        .button-group { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+        .button { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.75rem 1.25rem; border: none; border-radius: var(--border-radius); font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .button:disabled { cursor: not-allowed; opacity: 0.6; }
+        .button.primary { background-color: var(--primary-color); color: #18191a; }
+        .button.primary:hover:not(:disabled) { background-color: var(--primary-color-hover); }
+        .button.secondary { background-color: var(--secondary-color); color: white; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); backdrop-filter: blur(5px); align-items: center; justify-content: center; }
+        .modal.is-visible { display: flex; }
+        .modal-content { background-color: var(--fg-color); padding: 2rem; border-radius: var(--border-radius); width: 90%; max-width: 600px; }
+        .modal-close { position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-color-light); }
+        .notification { position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%); padding: 1rem 1.5rem; border-radius: var(--border-radius); color: white; z-index: 2000; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .notification.success { background-color: var(--success-color); }
+        .notification.error { background-color: var(--danger-color); }
+        .progress-bar { width: 100%; height: 10px; background-color: var(--border-color); border-radius: 5px; overflow: hidden; margin: 1rem 0; }
+        .progress-bar-inner { height: 100%; width: 100%; background-image: linear-gradient(90deg, var(--primary-color) 0%, var(--primary-color-hover) 50%, var(--primary-color) 100%); animation: indeterminate-progress 2s infinite linear; }
+        @keyframes indeterminate-progress { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+        .dark-mode-toggle { display: none; } /* Dark mode is default, toggle removed for simplicity */
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header><h1>AI Voice Lab</h1></header>
+        
+        <div class="card">
+            <h2>Instant Voice Clone & TTS</h2>
+            <div class="form-group">
+                <label for="audio-file-input">1. Upload Voice Sample (WAV/MP3)</label>
+                <input type="file" id="audio-file-input" accept="audio/*">
+            </div>
+            <div class="form-group">
+                <label for="text-input">2. Enter Text to Synthesize</label>
+                <textarea id="text-input" rows="5">Hello world! This is a test of my new voice clone. It's working perfectly with Replicate.</textarea>
+            </div>
+             <div class="form-group">
+                <label for="language-select">3. Select Language</label>
+                <select id="language-select">
+                    <option value="en">English</option>
+                    <option value="hi">Hindi</option>
+                    <option value="es">Spanish</option>
+                    <option value="fr">French</option>
+                </select>
+            </div>
+            <div id="synthesis-progress-container" style="display: none;">
+                <p id="status-text">Synthesizing...</p>
+                <div class="progress-bar"><div class="progress-bar-inner"></div></div>
+            </div>
+            <div class="button-group">
+                <button id="synthesize-btn" class="button primary" style="width:100%;">Generate Cloned Audio</button>
+            </div>
+        </div>
+        
+        <div class="card" id="playback-card" style="display: none;">
+            <h2>Playback</h2>
+            <audio id="audio-player" controls style="width:100%;"></audio>
+        </div>
+    </div>
+
+    <div id="notification-container"></div>
+
+    <script>
+    (function() {
+        'use strict';
+        
+        const ui = {
+            audioFileInput: document.getElementById('audio-file-input'),
+            textInput: document.getElementById('text-input'),
+            languageSelect: document.getElementById('language-select'),
+            synthesizeBtn: document.getElementById('synthesize-btn'),
+            synthesisProgress: document.getElementById('synthesis-progress-container'),
+            statusText: document.getElementById('status-text'),
+            playbackCard: document.getElementById('playback-card'),
+            audioPlayer: document.getElementById('audio-player'),
+            notificationContainer: document.getElementById('notification-container'),
+        };
+
+        ui.synthesizeBtn.addEventListener('click', handleSynthesize);
+
+        async function handleSynthesize() {
+            const file = ui.audioFileInput.files[0];
+            const text = ui.textInput.value.trim();
+            const language = ui.languageSelect.value;
+
+            if (!file || !text) {
+                showNotification('Please upload an audio file and enter text.', 'error');
+                return;
+            }
+
+            setSynthesizingState(true, 'Uploading and starting job... this can take a minute.');
+            ui.playbackCard.style.display = 'none';
+
+            try {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = async () => {
+                    const audioDataUrl = reader.result;
+
+                    // Send request to our Vercel serverless function
+                    const response = await fetch('/api/clone', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            text,
+                            language,
+                            audioDataUrl
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.error || 'Failed to generate audio.');
+                    }
+
+                    const result = await response.json();
+                    const audioUrl = result.audio_url;
+
+                    if (!audioUrl) {
+                        throw new Error('API did not return an audio URL.');
+                    }
+
+                    ui.audioPlayer.src = audioUrl;
+                    ui.playbackCard.style.display = 'block';
+                    setSynthesizingState(false);
+                    showNotification('Audio generated successfully!', 'success');
+                };
+
+                reader.onerror = (error) => {
+                    throw new Error('Failed to read the audio file.');
+                };
+            } catch (error) {
+                setSynthesizingState(false);
+                showNotification(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        function setSynthesizingState(isSynthesizing, message = 'Synthesizing...') {
+            ui.synthesizeBtn.disabled = isSynthesizing;
+            ui.synthesisProgress.style.display = isSynthesizing ? 'block' : 'none';
+            if (isSynthesizing) {
+                ui.statusText.textContent = message;
+            }
+        }
+
+        function showNotification(message, type = 'info', duration = 5000) {
+            const notif = document.createElement('div');
+            notif.className = `notification ${type}`;
+            notif.textContent = message;
+            
+            // Remove any existing notification
+            const existingNotif = ui.notificationContainer.querySelector('.notification');
+            if(existingNotif) existingNotif.remove();
+            
+            ui.notificationContainer.appendChild(notif);
+
+            setTimeout(() => {
+                notif.style.opacity = '0';
+                notif.style.transition = 'opacity 0.5s';
+                notif.addEventListener('transitionend', () => notif.remove());
+            }, duration);
+        }
+        
+        // Simplified init
+        document.body.classList.add('dark-mode');
+
+    })();
+    </script>
+</body>
+</html>
